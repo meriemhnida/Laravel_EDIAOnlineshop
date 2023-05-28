@@ -24,8 +24,7 @@ COPY . /var/www/html
 ENV COMPOSER_ALLOW_SUPERUSER=1
 # Installer les dépendances de l'application
 RUN echo 'Running composer' && \
-    composer global require hirak/prestissimo && \
-    composer install --no-dev --working-dir=/var/www/html
+     composer install 
 
 # Définir les variables d'environnement pour la base de données
 ENV DB_CONNECTION=mysql
