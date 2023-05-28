@@ -22,7 +22,7 @@ WORKDIR /var/www/html
 COPY . /var/www/html
 
 # Installer les dépendances de l'application
-RUN composer install
+RUN composer install --optimize-autoloader --no-dev
 
 # Définir les variables d'environnement pour la base de données
 ENV DB_CONNECTION=mysql
