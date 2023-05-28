@@ -1,41 +1,50 @@
-# Utiliser une image de base contenant PHP et Composer
-FROM php:8.0-fpm
+# Stage 1: Build the Laravel app
+FROM composer:2 as builder
 
-# Installer les dépendances système nécessaires
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    curl \
-    libzip-dev \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath opcache
+# Set working directory
+WORKDIR /app
 
-# Installer Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Copy the composer files
+COPY composer.* ./
 
-# Définir le répertoire de travail dans le conteneur
-WORKDIR /var/www/html
+# Install dependencies
+RUN composer install --optimize-autoloader --no-dev
 
-# Copier les fichiers de l'application dans le conteneur
-COPY . /var/www/html
+# Copy the rest of the application
+COPY . .
 
-ENV COMPOSER_ALLOW_SUPERUSER=1
-# Installer les dépendances de l'application
-RUN echo 'Running composer' 
-CMD  composer install --optimize-autoloader --no-dev
-COPY . /var/www/html
-# Définir les variables d'environnement pour la base de données
-ENV DB_CONNECTION=mysql
-ENV DB_HOST=ybqvvg14edivikmrh7wui-mysql.services.clever-cloud.com
-ENV DB_PORT=3306
-ENV DB_DATABASE=bqvvg14edivikmrh7wui
-ENV DB_USERNAME=u8m1mjdgzts5gwhg
-ENV DB_PASSWORD=J7IcYOnNJ4zEry22uOuz
+# Generate the optimized class loader
+RUN composer dump-autoload --optimize --classmap-authoritative
 
-# Exposer le port du serveur web (si nécessaire)
+# Build the production assets (optional)
+RUN php artisan config:cache
+RUN php artisan route:cache
+RUN php artisan view:cache
+
+# Stage 2: Create a lightweight production image
+FROM php:8.0-fpm-alpine
+
+# Install dependencies
+RUN apk --no-cache add \
+    nginx \
+    supervisor \
+    curl
+
+# Copy the Laravel app from the previous stage
+COPY --from=builder /app /var/www/html
+
+# Copy nginx configuration
+COPY deploy/nginx.conf /etc/nginx/nginx.conf
+
+# Copy supervisor configuration
+COPY deploy/supervisord.conf /etc/supervisord.conf
+
+# Set up writable directories
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Expose the HTTP port
 EXPOSE 80
 
-# Définir le point d'entrée du conteneur
-CMD php artisan serve --host=0.0.0.0 --port=80
+# Set the entrypoint to start supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+
