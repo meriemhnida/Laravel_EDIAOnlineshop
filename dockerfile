@@ -21,6 +21,7 @@ WORKDIR /var/www/html
 # Copier les fichiers de l'application dans le conteneur
 COPY . /var/www/html
 
+ENV COMPOSER_ALLOW_SUPERUSER=1
 # Installer les dépendances de l'application
 RUN composer install --optimize-autoloader --no-dev
 
