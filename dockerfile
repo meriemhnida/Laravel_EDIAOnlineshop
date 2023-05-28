@@ -25,7 +25,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 # Installer les dépendances de l'application
 RUN echo 'Running composer' 
 CMD  composer install --optimize-autoloader --no-dev
-
+COPY . /var/www/html
 # Définir les variables d'environnement pour la base de données
 ENV DB_CONNECTION=mysql
 ENV DB_HOST=ybqvvg14edivikmrh7wui-mysql.services.clever-cloud.com
