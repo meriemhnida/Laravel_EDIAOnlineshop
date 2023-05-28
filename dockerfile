@@ -24,7 +24,7 @@ COPY . /var/www/html
 ENV COMPOSER_ALLOW_SUPERUSER=1
 # Installer les dépendances de l'application
 RUN echo 'Running composer' 
-CMD  composer install 
+CMD  composer install --optimize-autoloader --no-dev
 
 # Définir les variables d'environnement pour la base de données
 ENV DB_CONNECTION=mysql
